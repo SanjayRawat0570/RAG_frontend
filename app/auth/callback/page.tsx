@@ -21,9 +21,9 @@ export default function AuthCallback() {
   }, [router]);
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-zinc-950">
-      <div className="h-8 w-8 animate-spin rounded-full border-2 border-zinc-600 border-t-violet-500" />
-      <p className="text-sm text-zinc-400">Verifying your account…</p>
+    <div className="flex min-h-screen flex-col items-center justify-center gap-4" style={{ backgroundColor: "var(--bg-base)" }}>
+      <div className="h-8 w-8 animate-spin rounded-full border-2" style={{ borderColor: "var(--border-mid)", borderTopColor: "var(--royal)" }} />
+      <p className="text-sm" style={{ color: "var(--text-muted)" }}>Verifying your account…</p>
     </div>
   );
 }

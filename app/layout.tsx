@@ -13,6 +13,15 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
+      <head>
+        <script
+          // Set the theme attribute before paint so switching pages / reloading
+          // never flashes the wrong palette.
+          dangerouslySetInnerHTML={{
+            __html: `try{var t=localStorage.getItem("theme");document.documentElement.setAttribute("data-theme",t==="dark"?"dark":"light");}catch(e){}`,
+          }}
+        />
+      </head>
       <body>{children}</body>
     </html>
   );

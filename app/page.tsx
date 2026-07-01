@@ -12,6 +12,7 @@ import {
 } from "@/lib/api";
 import { signOut, getSession, userFromSession } from "@/lib/auth";
 import { supabase } from "@/lib/supabase";
+import ThemeToggle from "@/components/ThemeToggle";
 
 type View = "dashboard" | "ask" | "docs" | "settings";
 type SettingsTab = "tenants" | "cost" | "security" | "feedback" | "personalization";
@@ -43,24 +44,33 @@ const SAMPLE_DOC = `# Company Handbook\n\n## Security Policy\nAll data is encryp
 
 // ── Design tokens ──────────────────────────────────────────────────────────────
 const T = {
-  bgBase:      "#07101F",                      // deepest navy
-  bgSurface:   "#09152A",                      // sidebar
-  bgCard:      "#0D1E38",                      // cards / panels
-  bgInput:     "#0B1A30",                      // inputs
-  border:      "#132D5A",                      // subtle border
-  borderMid:   "#1A3D7A",                      // default border
-  royal:       "#1359B9",                      // royal blue – buttons, active
-  royalHover:  "#1A6ED9",                      // hover state
-  royalGlow:   "rgba(19,89,185,0.22)",
-  sky:         "#9FE4FB",                      // sky blue – highlights, tags
-  skyDim:      "rgba(159,228,251,0.10)",
-  skyBorder:   "rgba(159,228,251,0.25)",
-  textPri:     "#EBF4FF",                      // near-white with blue tint
-  textSec:     "#9FE4FB",                      // sky blue
-  textMuted:   "#4D82B8",                      // muted blue
-  textDim:     "#1E3A5A",                      // very dim
-  green:       "#00C896",
-  amber:       "#FFA94D",
+  bgBase:      "var(--bg-base)",
+  bgSurface:   "var(--bg-surface)",
+  bgCard:      "var(--bg-card)",
+  bgInput:     "var(--bg-input)",
+  border:      "var(--border)",
+  borderMid:   "var(--border-mid)",
+  royal:       "var(--royal)",
+  royalHover:  "var(--royal-hover)",
+  royalGlow:   "var(--royal-glow)",
+  sky:         "var(--sky)",
+  skyDim:      "var(--sky-dim)",
+  skyBorder:   "var(--sky-border)",
+  magenta:     "var(--magenta)",
+  magentaDim:  "var(--magenta-dim)",
+  magentaBorder: "var(--magenta-border)",
+  textPri:     "var(--text-pri)",
+  textSec:     "var(--text-sec)",
+  textMuted:   "var(--text-muted)",
+  textDim:     "var(--text-dim)",
+  green:       "var(--green)",
+  amber:       "var(--amber)",
+  // claymorphism – soft puffy dual shadows (light highlight + dark depth)
+  clayRaised:    "var(--clay-raised)",
+  clayRaisedSm:  "var(--clay-raised-sm)",
+  clayRaisedHov: "var(--clay-raised-hov)",
+  clayPressed:   "var(--clay-pressed)",
+  clayPressedSm: "var(--clay-pressed-sm)",
 };
 
 // ── Root ───────────────────────────────────────────────────────────────────────
@@ -104,8 +114,8 @@ export default function Home() {
         {/* Logo */}
         <div className="flex items-center gap-2.5 px-4 py-3.5" style={{ borderBottom: `1px solid ${T.border}` }}>
           <div
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-xs font-black text-white"
-            style={{ background: `linear-gradient(135deg, ${T.royal}, ${T.sky})`, boxShadow: `0 2px 12px ${T.royalGlow}` }}
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl text-xs font-black text-white"
+            style={{ background: `linear-gradient(135deg, ${T.royal}, ${T.magenta}, ${T.sky})`, boxShadow: `0 2px 14px ${T.royalGlow}, ${T.clayRaisedSm}` }}
           >
             R
           </div>
@@ -116,16 +126,16 @@ export default function Home() {
         </div>
 
         {/* Nav */}
-        <nav className="flex-1 overflow-y-auto py-2">
+        <nav className="flex-1 overflow-y-auto py-2 px-2 space-y-1">
           {NAV.map((item) => (
             <button
               key={item.id}
               onClick={() => setView(item.id)}
-              className="group flex w-full items-center gap-2.5 px-3 py-2 text-left transition-all"
+              className="group flex w-full items-center gap-2.5 rounded-2xl px-3 py-2.5 text-left transition-all"
               style={view === item.id
-                ? { backgroundColor: T.skyDim, color: T.sky, borderRight: `2px solid ${T.sky}` }
+                ? { backgroundColor: T.skyDim, color: T.sky, boxShadow: T.clayRaisedSm }
                 : { color: T.textMuted }}
-              onMouseEnter={e => { if (view !== item.id) (e.currentTarget as HTMLElement).style.backgroundColor = "rgba(19,89,185,0.12)"; (e.currentTarget as HTMLElement).style.color = T.textPri; }}
+              onMouseEnter={e => { if (view !== item.id) (e.currentTarget as HTMLElement).style.backgroundColor = "rgba(var(--royal-rgb),0.12)"; (e.currentTarget as HTMLElement).style.color = T.textPri; }}
               onMouseLeave={e => { if (view !== item.id) { (e.currentTarget as HTMLElement).style.backgroundColor = "transparent"; (e.currentTarget as HTMLElement).style.color = T.textMuted; } }}
             >
               <span className="shrink-0 text-lg leading-none transition-transform group-hover:scale-110">{item.icon}</span>
@@ -147,10 +157,10 @@ export default function Home() {
           )}
           <button
             onClick={async () => { await signOut(); router.replace("/login"); }}
-            className="w-full rounded-md py-1.5 text-sm font-medium transition"
-            style={{ border: `1px solid ${T.border}`, color: T.textMuted }}
-            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = T.royal; (e.currentTarget as HTMLElement).style.color = T.textPri; }}
-            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = T.border; (e.currentTarget as HTMLElement).style.color = T.textMuted; }}
+            className="w-full rounded-2xl py-1.5 text-sm font-medium transition"
+            style={{ backgroundColor: T.bgSurface, boxShadow: T.clayRaisedSm, color: T.textMuted }}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = T.textPri; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = T.textMuted; }}
           >
             Sign out
           </button>
@@ -162,14 +172,14 @@ export default function Home() {
 
         {/* Top bar */}
         <header className="flex shrink-0 items-center justify-between px-6 py-3 backdrop-blur"
-          style={{ borderBottom: `1px solid ${T.border}`, backgroundColor: "rgba(7,16,31,0.90)" }}>
+          style={{ borderBottom: `1px solid ${T.border}`, backgroundColor: "rgba(var(--bg-base-rgb),0.90)" }}>
           <div>
             <h1 className="text-xl font-bold" style={{ color: T.textPri }}>{currentNav.label}</h1>
             <p className="text-sm" style={{ color: T.textMuted }}>{currentNav.desc}</p>
           </div>
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2 rounded-full px-3 py-1.5"
-              style={{ backgroundColor: T.bgCard, border: `1px solid ${T.border}` }}>
+            <div className="flex items-center gap-2 rounded-full px-3.5 py-1.5"
+              style={{ backgroundColor: T.bgCard, boxShadow: T.clayRaisedSm }}>
               <span className="h-2 w-2 rounded-full"
                 style={{ backgroundColor: health?.status === "ok" ? T.green : health ? "#e74c3c" : T.textDim }} />
               <span className="text-sm font-medium"
@@ -177,6 +187,7 @@ export default function Home() {
                 {health === null ? "Connecting…" : health.status === "ok" ? "API Online" : "API Offline"}
               </span>
             </div>
+            <ThemeToggle />
           </div>
         </header>
 
@@ -231,33 +242,30 @@ function DashboardView({ health }: { health: { status: string; version: string }
       <div className="grid grid-cols-4 gap-4">
         <StatCard label="API Status" value={health === null ? "…" : online ? "Online" : "Offline"} sub={health?.version ? `v${health.version}` : "connecting…"} accent={health === null ? T.textMuted : online ? T.green : "#e74c3c"} />
         <StatCard label="Features"   value="25"   sub="F1 – F25 complete"   accent={T.sky}   />
-        <StatCard label="Test Suite" value="867"  sub="all tests passing"    accent={T.royal} />
-        <StatCard label="Paid APIs"  value="None" sub="offline-first design" accent={T.green} />
+        <StatCard label="Test Suite" value="867"  sub="all tests passing"    accent={T.magenta} />
+        <StatCard label="Paid APIs"  value="None" sub="offline-first design" accent={T.amber} />
       </div>
 
       <div>
         <SectionLabel>Active Features</SectionLabel>
         <div className="mt-3 grid grid-cols-3 gap-2">
           {features.map(([name, desc, tag]) => (
-            <div key={name} className="rounded-xl p-3 transition-all duration-200"
+            <div key={name} className="rounded-[22px] p-3 transition-all duration-200"
               style={{
-                border: `1px solid ${T.border}`,
-                background: "rgba(13,30,56,0.60)",
-                backdropFilter: "blur(10px)",
+                background: T.bgCard,
+                boxShadow: T.clayRaisedSm,
                 position: "relative", overflow: "hidden",
                 cursor: "default",
               }}
               onMouseEnter={e => {
                 const el = e.currentTarget as HTMLElement;
-                el.style.borderColor = T.skyBorder;
                 el.style.transform = "translateY(-2px)";
-                el.style.boxShadow = `0 8px 28px rgba(19,89,185,0.18)`;
+                el.style.boxShadow = `${T.clayRaisedHov}, 0 0 0 1px rgba(var(--sky-rgb),0.25)`;
               }}
               onMouseLeave={e => {
                 const el = e.currentTarget as HTMLElement;
-                el.style.borderColor = T.border;
                 el.style.transform = "translateY(0)";
-                el.style.boxShadow = "none";
+                el.style.boxShadow = T.clayRaisedSm;
               }}
             >
               <div style={{
@@ -278,11 +286,9 @@ function DashboardView({ health }: { health: { status: string; version: string }
         </div>
       </div>
 
-      <div className="rounded-2xl p-5" style={{
-        border: `1px solid ${T.skyBorder}`,
-        background: "linear-gradient(135deg, rgba(19,89,185,0.08), rgba(159,228,251,0.05))",
-        backdropFilter: "blur(10px)",
-        boxShadow: `inset 0 1px 0 rgba(159,228,251,0.08)`,
+      <div className="rounded-[28px] p-5" style={{
+        background: "var(--quickstart-gradient)",
+        boxShadow: `${T.clayRaised}, inset 0 1px 0 rgba(255,255,255,0.6)`,
       }}>
         <div className="mb-3 flex items-center gap-2">
           <span style={{ color: T.sky, fontSize: "16px" }}>◎</span>
@@ -297,7 +303,7 @@ function DashboardView({ health }: { health: { status: string; version: string }
           ].map(([title, desc], i) => (
             <li key={i} className="flex items-start gap-3 text-sm">
               <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-xs font-bold"
-                style={{ background: T.royal, color: "white" }}>{i + 1}</span>
+                style={{ background: `linear-gradient(135deg, ${T.royal}, ${T.magenta})`, color: "white", boxShadow: T.clayRaisedSm }}>{i + 1}</span>
               <span><strong style={{ color: T.textPri }}>{title}</strong> — {desc}</span>
             </li>
           ))}
@@ -359,10 +365,10 @@ function KnowledgeView({ tenant }: { tenant: string }) {
       <Panel>
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-base font-semibold" style={{ color: T.textPri }}>Add Document</h2>
-          <div className="flex rounded-lg p-0.5" style={{ border: `1px solid ${T.border}` }}>
+          <div className="flex rounded-2xl p-1" style={{ backgroundColor: T.bgInput, boxShadow: T.clayPressedSm }}>
             {(["file", "text"] as const).map((m) => (
-              <button key={m} onClick={() => setMode(m)} className="rounded-md px-3 py-1 text-xs font-medium transition"
-                style={mode === m ? { backgroundColor: T.royal, color: "#fff" } : { color: T.textMuted }}>
+              <button key={m} onClick={() => setMode(m)} className="rounded-xl px-3 py-1 text-xs font-medium transition"
+                style={mode === m ? { background: `linear-gradient(135deg, ${T.royal}, ${T.royalHover})`, color: "#fff", boxShadow: T.clayRaisedSm } : { color: T.textMuted }}>
                 {m === "file" ? "Upload file" : "Paste text"}
               </button>
             ))}
@@ -389,7 +395,7 @@ function KnowledgeView({ tenant }: { tenant: string }) {
             </div>
             {file && (
               <div className="flex items-center justify-between rounded-lg px-3 py-2"
-                style={{ border: `1px solid ${T.borderMid}`, backgroundColor: T.bgInput }}>
+                style={{ backgroundColor: T.bgInput, boxShadow: T.clayPressedSm }}>
                 <span className="truncate text-sm" style={{ color: T.textPri }}>{file.name}</span>
                 <button onClick={() => { setFile(null); setExecution(null); }} className="ml-2 shrink-0 transition" style={{ color: T.textMuted }}>✕</button>
               </div>
@@ -401,9 +407,9 @@ function KnowledgeView({ tenant }: { tenant: string }) {
             <StyledInput value={filename} onChange={e => setFilename(e.target.value)} placeholder="filename (e.g. handbook.md)" />
             <textarea value={docText} onChange={e => setDocText(e.target.value)} rows={10}
               className="w-full resize-y rounded-lg px-3 py-2 font-mono text-xs outline-none transition"
-              style={{ border: `1px solid ${T.borderMid}`, backgroundColor: T.bgInput, color: T.textSec }}
-              onFocus={e => (e.currentTarget.style.borderColor = T.sky)}
-              onBlur={e => (e.currentTarget.style.borderColor = T.borderMid)} />
+              style={{ backgroundColor: T.bgInput, boxShadow: T.clayPressedSm, color: T.textSec }}
+              onFocus={e => (e.currentTarget.style.boxShadow = `${T.clayPressedSm}, 0 0 0 2px ${T.skyBorder}`)}
+              onBlur={e => (e.currentTarget.style.boxShadow = T.clayPressedSm)} />
             <BlueButton onClick={onIndex} disabled={indexing || !docText.trim()}>{indexing ? "Indexing…" : "Index document"}</BlueButton>
             {indexResult && <SuccessBanner msg={`${indexResult.upserted} chunks indexed into "${indexResult.namespace}"`} />}
           </div>
@@ -455,7 +461,7 @@ function KnowledgeView({ tenant }: { tenant: string }) {
           </div>
         )}
         {done && !execution && (
-          <div className="rounded-lg p-4 text-xs" style={{ border: `1px solid ${T.border}`, backgroundColor: T.bgInput }}>
+          <div className="rounded-lg p-4 text-xs" style={{ backgroundColor: T.bgInput, boxShadow: T.clayPressedSm }}>
             <div className="mb-1 font-semibold" style={{ color: T.textPri }}>Namespace:</div>
             <code style={{ color: T.sky }}>{tenant}</code>
             <div className="mt-2" style={{ color: T.textMuted }}>Switch to <strong>Ask AI</strong> to query this content.</div>
@@ -501,9 +507,9 @@ function AskView({ tenant }: { tenant: string }) {
             onKeyDown={e => { if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) onAsk(); }}
             rows={3} placeholder="Ask anything about your indexed documents…"
             className="w-full resize-y rounded-lg px-3 py-2 text-sm outline-none transition"
-            style={{ border: `1px solid ${T.borderMid}`, backgroundColor: T.bgInput, color: T.textPri }}
-            onFocus={e => (e.currentTarget.style.borderColor = T.sky)}
-            onBlur={e => (e.currentTarget.style.borderColor = T.borderMid)} />
+            style={{ backgroundColor: T.bgInput, boxShadow: T.clayPressedSm, color: T.textPri }}
+            onFocus={e => (e.currentTarget.style.boxShadow = `${T.clayPressedSm}, 0 0 0 2px ${T.skyBorder}`)}
+            onBlur={e => (e.currentTarget.style.boxShadow = T.clayPressedSm)} />
           <BlueButton onClick={onAsk} disabled={asking || !question.trim()} className="mt-3">
             {asking ? "Thinking…" : "Ask"}
           </BlueButton>
@@ -520,7 +526,7 @@ function AskView({ tenant }: { tenant: string }) {
         )}
       </div>
 
-      <div className="rounded-xl p-4 lg:col-span-2" style={{ border: `1px solid ${T.border}`, backgroundColor: T.bgCard }}>
+      <div className="rounded-[28px] p-4 lg:col-span-2" style={{ backgroundColor: T.bgCard, boxShadow: T.clayRaised }}>
         <SectionLabel>History</SectionLabel>
         {history.length === 0 ? (
           <p className="mt-6 text-center text-xs" style={{ color: T.textDim }}>No queries yet.</p>
@@ -528,10 +534,10 @@ function AskView({ tenant }: { tenant: string }) {
           <div className="mt-3 space-y-2">
             {history.map(entry => (
               <button key={entry.ts} onClick={() => setQuestion(entry.question)}
-                className="w-full rounded-lg p-3 text-left transition"
-                style={{ border: `1px solid ${T.border}`, backgroundColor: T.bgInput }}
-                onMouseEnter={e => (e.currentTarget as HTMLElement).style.borderColor = T.royal}
-                onMouseLeave={e => (e.currentTarget as HTMLElement).style.borderColor = T.border}
+                className="w-full rounded-2xl p-3 text-left transition"
+                style={{ backgroundColor: T.bgInput, boxShadow: T.clayPressedSm }}
+                onMouseEnter={e => (e.currentTarget as HTMLElement).style.boxShadow = `${T.clayPressedSm}, 0 0 0 2px ${T.skyBorder}`}
+                onMouseLeave={e => (e.currentTarget as HTMLElement).style.boxShadow = T.clayPressedSm}
               >
                 <p className="truncate text-xs font-medium" style={{ color: T.textPri }}>{entry.question}</p>
                 <div className="mt-1 flex items-center gap-2">
@@ -553,9 +559,9 @@ function AskView({ tenant }: { tenant: string }) {
 function AnswerCard({ entry }: { entry: ChatEntry }) {
   const { result } = entry;
   return (
-    <div className="space-y-3 rounded-xl p-5" style={{ border: `1px solid ${T.border}`, backgroundColor: T.bgCard }}>
+    <div className="space-y-3 rounded-[28px] p-5" style={{ backgroundColor: T.bgCard, boxShadow: T.clayRaised }}>
       <p className="text-xs italic" style={{ color: T.textMuted }}>"{entry.question}"</p>
-      <div className="rounded-lg p-4" style={{ border: `1px solid ${T.border}`, backgroundColor: T.bgSurface }}>
+      <div className="rounded-2xl p-4" style={{ backgroundColor: T.bgSurface, boxShadow: T.clayPressedSm }}>
         <pre className="whitespace-pre-wrap font-sans text-sm leading-relaxed" style={{ color: T.textPri }}>{result.answer}</pre>
       </div>
       {result.citations?.length > 0 && (
@@ -599,7 +605,7 @@ function TenantsView({ tenant, onChange }: { tenant: string; onChange: (t: strin
           <div className="mt-4 grid grid-cols-3 gap-3">
             {[{ val: info.namespace, label: "namespace", hi: true }, { val: info.doc_count ?? "—", label: "documents", hi: false }, { val: info.vector_count ?? "—", label: "vectors", hi: false }]
               .map(({ val, label, hi }) => (
-                <div key={label} className="rounded-lg p-3 text-center" style={{ border: `1px solid ${T.border}`, backgroundColor: T.bgInput }}>
+                <div key={label} className="rounded-lg p-3 text-center" style={{ backgroundColor: T.bgInput, boxShadow: T.clayPressedSm }}>
                   <div className="text-base font-bold" style={{ color: hi ? T.sky : T.textPri }}>{val}</div>
                   <div className="text-xs" style={{ color: T.textMuted }}>{label}</div>
                 </div>
@@ -679,19 +685,19 @@ function CostView() {
           ? <p className="mt-2 text-sm" style={{ color: T.textDim }}>No usage recorded yet — ask a question first.</p>
           : <div className="mt-3 space-y-4">
               <div className="grid grid-cols-4 gap-3">
-                <div className="rounded-xl p-3 text-center" style={{ border:`1px solid ${T.border}`, backgroundColor: T.bgInput }}>
+                <div className="rounded-xl p-3 text-center" style={{ backgroundColor: T.bgInput, boxShadow: T.clayPressedSm }}>
                   <div className="text-2xl font-black" style={{ color: T.sky }}>{summary.total_requests}</div>
                   <div className="mt-1 text-xs" style={{ color: T.textMuted }}>Total Requests</div>
                 </div>
-                <div className="rounded-xl p-3 text-center" style={{ border:`1px solid ${T.border}`, backgroundColor: T.bgInput }}>
+                <div className="rounded-xl p-3 text-center" style={{ backgroundColor: T.bgInput, boxShadow: T.clayPressedSm }}>
                   <div className="text-2xl font-black" style={{ color: T.green }}>${summary.total_cost.toFixed(5)}</div>
                   <div className="mt-1 text-xs" style={{ color: T.textMuted }}>Total Cost</div>
                 </div>
-                <div className="rounded-xl p-3 text-center" style={{ border:`1px solid ${T.border}`, backgroundColor: T.bgInput }}>
+                <div className="rounded-xl p-3 text-center" style={{ backgroundColor: T.bgInput, boxShadow: T.clayPressedSm }}>
                   <div className="text-2xl font-black" style={{ color: T.amber }}>{summary.cached_requests}</div>
                   <div className="mt-1 text-xs" style={{ color: T.textMuted }}>Cache Hits</div>
                 </div>
-                <div className="rounded-xl p-3 text-center" style={{ border:`1px solid ${T.border}`, backgroundColor: T.bgInput }}>
+                <div className="rounded-xl p-3 text-center" style={{ backgroundColor: T.bgInput, boxShadow: T.clayPressedSm }}>
                   <div className="text-2xl font-black" style={{ color: T.royal }}>{(summary.cache_hit_rate * 100).toFixed(0)}%</div>
                   <div className="mt-1 text-xs" style={{ color: T.textMuted }}>Hit Rate</div>
                 </div>
@@ -718,7 +724,7 @@ function CostView() {
           <SectionLabel>Model Pricing (per 1 K tokens)</SectionLabel>
           <div className="mt-3 grid grid-cols-3 gap-2">
             {Object.entries(pricing.pricing).map(([model, data]) => (
-              <div key={model} className="rounded-lg p-3" style={{ border: `1px solid ${T.border}`, backgroundColor: T.bgInput }}>
+              <div key={model} className="rounded-lg p-3" style={{ backgroundColor: T.bgInput, boxShadow: T.clayPressedSm }}>
                 <div className="truncate font-mono text-xs font-medium" style={{ color: T.textPri }}>{model}</div>
                 <div className="mt-1.5 flex gap-3 text-xs" style={{ color: T.textMuted }}>
                   <span>in ${data.input_per_1k.toFixed(4)}</span>
@@ -805,7 +811,7 @@ function SecurityView() {
                         <span className="rounded-full px-2 py-0.5 text-xs font-medium"
                           style={k.revoked
                             ? { backgroundColor: "rgba(231,76,60,0.15)", color: "#e74c3c" }
-                            : { backgroundColor: "rgba(0,200,150,0.15)", color: T.green }}>
+                            : { backgroundColor: "rgba(var(--green-rgb),0.15)", color: T.green }}>
                           {k.revoked ? "revoked" : "active"}
                         </span>
                       </td>
@@ -910,10 +916,10 @@ function FeedbackView() {
               <label className="mb-1 block text-sm font-medium" style={{ color: T.textMuted }}>Rating</label>
               <div className="flex gap-1.5">
                 {[1,2,3,4,5].map(n => (
-                  <button key={n} onClick={() => setRating(n)} className="flex-1 rounded-lg py-2 text-base transition"
+                  <button key={n} onClick={() => setRating(n)} className="flex-1 rounded-2xl py-2 text-base transition"
                     style={rating >= n
-                      ? { border: `1px solid ${T.sky}`, backgroundColor: T.skyDim, color: T.sky }
-                      : { border: `1px solid ${T.border}`, color: T.textDim }}>★</button>
+                      ? { backgroundColor: T.skyDim, color: T.sky, boxShadow: T.clayRaisedSm }
+                      : { backgroundColor: T.bgInput, color: T.textDim, boxShadow: T.clayPressedSm }}>★</button>
                 ))}
               </div>
               <p className="mt-1 text-center text-xs" style={{ color: T.textMuted }}>{rating} / 5 stars</p>
@@ -922,9 +928,9 @@ function FeedbackView() {
               <label className="mb-1 block text-sm font-medium" style={{ color: T.textMuted }}>Comment (optional)</label>
               <textarea value={comment} onChange={e => setComment(e.target.value)} rows={3}
                 className="w-full resize-y rounded-lg px-3 py-2 text-sm outline-none transition"
-                style={{ border: `1px solid ${T.borderMid}`, backgroundColor: T.bgInput, color: T.textPri }}
-                onFocus={e => (e.currentTarget.style.borderColor = T.sky)}
-                onBlur={e => (e.currentTarget.style.borderColor = T.borderMid)} />
+                style={{ backgroundColor: T.bgInput, boxShadow: T.clayPressedSm, color: T.textPri }}
+                onFocus={e => (e.currentTarget.style.boxShadow = `${T.clayPressedSm}, 0 0 0 2px ${T.skyBorder}`)}
+                onBlur={e => (e.currentTarget.style.boxShadow = T.clayPressedSm)} />
             </div>
             <BlueButton onClick={onSubmit} disabled={submitting}>{submitting ? "Submitting…" : "Submit Feedback"}</BlueButton>
           </div>
@@ -941,7 +947,7 @@ function FeedbackView() {
         )}
       </div>
 
-      <div className="rounded-xl p-5 lg:col-span-3" style={{ border: `1px solid ${T.border}`, backgroundColor: T.bgCard }}>
+      <div className="rounded-[28px] p-5 lg:col-span-3" style={{ backgroundColor: T.bgCard, boxShadow: T.clayRaised }}>
         <div className="mb-3 flex items-center justify-between">
           <h2 className="text-base font-semibold" style={{ color: T.textPri }}>Recent Feedback</h2>
           <button onClick={load} className="text-xs transition" style={{ color: T.textMuted }}
@@ -956,7 +962,7 @@ function FeedbackView() {
         ) : (
           <div className="space-y-2">
             {records.map(r => (
-              <div key={r.id} className="rounded-lg p-3" style={{ border: `1px solid ${T.border}`, backgroundColor: T.bgInput }}>
+              <div key={r.id} className="rounded-lg p-3" style={{ backgroundColor: T.bgInput, boxShadow: T.clayPressedSm }}>
                 <div className="flex items-center justify-between">
                   <div className="flex gap-0.5">
                     {[1,2,3,4,5].map(n => <span key={n} className="text-sm" style={{ color: r.rating >= n ? T.sky : T.textDim }}>★</span>)}
@@ -1038,8 +1044,8 @@ function PersonalizationView({ userId }: { userId: string }) {
                 <button key={t} onClick={() => setDocTypes(prev => prev.includes(t) ? prev.filter(x => x !== t) : [...prev, t])}
                   className="rounded-full px-3 py-1 text-xs font-medium transition"
                   style={docTypes.includes(t)
-                    ? { border: `1px solid ${T.sky}`, backgroundColor: T.skyDim, color: T.sky }
-                    : { border: `1px solid ${T.border}`, color: T.textMuted }}>
+                    ? { backgroundColor: T.skyDim, color: T.sky, boxShadow: T.clayRaisedSm }
+                    : { backgroundColor: T.bgInput, color: T.textMuted, boxShadow: T.clayPressedSm }}>
                   .{t}
                 </button>
               ))}
@@ -1053,7 +1059,10 @@ function PersonalizationView({ userId }: { userId: string }) {
             </div>
             <button onClick={() => setPreferRecent(p => !p)}
               className="relative h-5 w-9 rounded-full transition-colors"
-              style={{ backgroundColor: preferRecent ? T.royal : T.border }}>
+              style={{
+                background: preferRecent ? `linear-gradient(135deg, ${T.royal}, ${T.magenta})` : T.bgInput,
+                boxShadow: preferRecent ? T.clayRaisedSm : T.clayPressedSm,
+              }}>
               <span className="absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform"
                 style={{ transform: preferRecent ? "translateX(16px)" : "translateX(2px)" }} />
             </button>
@@ -1105,16 +1114,16 @@ function SettingsView({
   return (
     <div className="flex gap-5">
       {/* Vertical tab list */}
-      <aside className="flex w-44 shrink-0 flex-col gap-1 rounded-xl p-2" style={{ backgroundColor: T.bgCard, border: `1px solid ${T.border}`, alignSelf: "flex-start" }}>
+      <aside className="flex w-44 shrink-0 flex-col gap-1 rounded-[26px] p-2" style={{ backgroundColor: T.bgCard, boxShadow: T.clayRaised, alignSelf: "flex-start" }}>
         {SETTINGS_TABS.map(({ id, label }) => (
           <button
             key={id}
             onClick={() => onTab(id)}
-            className="rounded-lg px-3 py-2 text-left text-sm font-semibold transition"
+            className="rounded-2xl px-3 py-2 text-left text-sm font-semibold transition"
             style={tab === id
-              ? { backgroundColor: T.royal, color: "#fff" }
+              ? { background: `linear-gradient(135deg, ${T.royal}, ${T.royalHover})`, color: "#fff", boxShadow: T.clayRaisedSm }
               : { color: T.textMuted }}
-            onMouseEnter={e => { if (tab !== id) { (e.currentTarget as HTMLElement).style.backgroundColor = "rgba(19,89,185,0.12)"; (e.currentTarget as HTMLElement).style.color = T.textPri; } }}
+            onMouseEnter={e => { if (tab !== id) { (e.currentTarget as HTMLElement).style.backgroundColor = "rgba(var(--royal-rgb),0.12)"; (e.currentTarget as HTMLElement).style.color = T.textPri; } }}
             onMouseLeave={e => { if (tab !== id) { (e.currentTarget as HTMLElement).style.backgroundColor = "transparent"; (e.currentTarget as HTMLElement).style.color = T.textMuted; } }}
           >
             {label}
@@ -1139,24 +1148,18 @@ function SettingsView({
 // ══════════════════════════════════════════════════════════════════════════════
 function Panel({ children }: { children: React.ReactNode }) {
   return (
-    <div className="rounded-2xl p-5" style={{
-      border: `1px solid ${T.border}`,
-      background: "rgba(13,30,56,0.65)",
-      backdropFilter: "blur(14px)",
-      WebkitBackdropFilter: "blur(14px)",
-      boxShadow: "0 4px 28px rgba(5,8,15,0.45), inset 0 1px 0 rgba(255,255,255,0.03)",
+    <div className="rounded-[28px] p-5" style={{
+      background: T.bgCard,
+      boxShadow: T.clayRaised,
     }}>{children}</div>
   );
 }
 
 function StatCard({ label, value, sub, accent }: { label: string; value: string; sub: string; accent: string }) {
   return (
-    <div className="rounded-2xl p-5" style={{
-      border: `1px solid ${T.border}`,
-      background: "linear-gradient(145deg, rgba(13,30,56,0.80), rgba(9,21,42,0.90))",
-      backdropFilter: "blur(14px)",
-      WebkitBackdropFilter: "blur(14px)",
-      boxShadow: `0 4px 32px rgba(5,8,15,0.50), inset 0 1px 0 rgba(255,255,255,0.04)`,
+    <div className="rounded-[28px] p-5" style={{
+      background: "var(--statcard-gradient)",
+      boxShadow: T.clayRaised,
       position: "relative", overflow: "hidden",
     }}>
       {/* Top accent line */}
@@ -1169,7 +1172,7 @@ function StatCard({ label, value, sub, accent }: { label: string; value: string;
       <div style={{
         position: "absolute", top: 0, right: 0,
         width: "100px", height: "100px",
-        background: `radial-gradient(circle, ${accent}22 0%, transparent 70%)`,
+        background: `radial-gradient(circle, color-mix(in srgb, ${accent} 13%, transparent) 0%, transparent 70%)`,
         pointerEvents: "none",
       }} />
       <div className="text-sm font-medium" style={{ color: T.textMuted }}>{label}</div>
@@ -1184,17 +1187,19 @@ function BlueButton({ children, onClick, disabled = false, className = "" }: {
 }) {
   return (
     <button onClick={onClick} disabled={disabled}
-      className={`rounded-lg text-sm font-semibold text-white transition ${className}`}
+      className={`rounded-2xl text-sm font-semibold text-white transition ${className}`}
       style={{
-        backgroundColor: disabled ? T.borderMid : T.royal,
+        background: disabled ? T.borderMid : `linear-gradient(135deg, ${T.royal}, ${T.royalHover})`,
         padding: className.includes("px-") ? undefined : "0.625rem 0",
         width: className.includes("px-") ? undefined : "100%",
         opacity: disabled ? 0.55 : 1,
         cursor: disabled ? "not-allowed" : "pointer",
-        boxShadow: disabled ? "none" : `0 2px 14px ${T.royalGlow}`,
+        boxShadow: disabled ? "none" : `0 2px 14px ${T.royalGlow}, ${T.clayRaisedSm}`,
       }}
-      onMouseEnter={e => { if (!disabled) (e.currentTarget as HTMLElement).style.backgroundColor = T.royalHover; }}
-      onMouseLeave={e => { if (!disabled) (e.currentTarget as HTMLElement).style.backgroundColor = T.royal; }}
+      onMouseEnter={e => { if (!disabled) (e.currentTarget as HTMLElement).style.boxShadow = `0 2px 20px ${T.royalGlow}, ${T.clayRaisedHov}`; }}
+      onMouseLeave={e => { if (!disabled) (e.currentTarget as HTMLElement).style.boxShadow = `0 2px 14px ${T.royalGlow}, ${T.clayRaisedSm}`; }}
+      onMouseDown={e => { if (!disabled) (e.currentTarget as HTMLElement).style.boxShadow = `0 1px 8px ${T.royalGlow}, ${T.clayPressedSm}`; }}
+      onMouseUp={e => { if (!disabled) (e.currentTarget as HTMLElement).style.boxShadow = `0 2px 20px ${T.royalGlow}, ${T.clayRaisedHov}`; }}
     >
       {children}
     </button>
@@ -1207,23 +1212,23 @@ function StyledInput({ value, onChange, placeholder, className = "", onKeyDown }
 }) {
   return (
     <input value={value} onChange={onChange} placeholder={placeholder} onKeyDown={onKeyDown}
-      className={`rounded-lg px-3 py-2 text-sm outline-none transition ${className}`}
+      className={`rounded-2xl px-3.5 py-2.5 text-sm outline-none transition ${className}`}
       style={{
-        border: `1px solid ${T.borderMid}`, backgroundColor: T.bgInput, color: T.textPri,
+        backgroundColor: T.bgInput, color: T.textPri, boxShadow: T.clayPressedSm,
         width: className.includes("flex-1") ? undefined : "100%",
       }}
-      onFocus={e => (e.currentTarget.style.borderColor = T.sky)}
-      onBlur={e => (e.currentTarget.style.borderColor = T.borderMid)}
+      onFocus={e => (e.currentTarget.style.boxShadow = `${T.clayPressedSm}, 0 0 0 2px ${T.skyBorder}`)}
+      onBlur={e => (e.currentTarget.style.boxShadow = T.clayPressedSm)}
     />
   );
 }
 
 function Chip({ children, accent = false }: { children: React.ReactNode; accent?: boolean }) {
   return (
-    <span className="rounded-full px-2 py-0.5 text-xs"
+    <span className="rounded-full px-2.5 py-1 text-xs"
       style={accent
-        ? { border: `1px solid ${T.skyBorder}`, backgroundColor: T.skyDim, color: T.sky }
-        : { border: `1px solid ${T.border}`, backgroundColor: T.bgSurface, color: T.textMuted }}>
+        ? { backgroundColor: T.skyDim, color: T.sky, boxShadow: T.clayRaisedSm }
+        : { backgroundColor: T.bgSurface, color: T.textMuted, boxShadow: T.clayRaisedSm }}>
       {children}
     </span>
   );
@@ -1232,7 +1237,7 @@ function Chip({ children, accent = false }: { children: React.ReactNode; accent?
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
     <h3 className="text-sm font-bold uppercase tracking-widest" style={{
-      background: `linear-gradient(90deg, ${T.sky}, ${T.royal})`,
+      background: `linear-gradient(90deg, ${T.sky}, ${T.magenta}, ${T.royal})`,
       WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
       backgroundClip: "text",
     }}>{children}</h3>
@@ -1244,7 +1249,7 @@ function ErrorBanner({ msg }: { msg: string }) {
 }
 
 function SuccessBanner({ msg }: { msg: string }) {
-  return <div className="mb-3 rounded-lg px-4 py-3 text-sm" style={{ border: "1px solid rgba(0,200,150,0.35)", backgroundColor: "rgba(0,200,150,0.10)", color: "#00C896" }}>✓ {msg}</div>;
+  return <div className="mb-3 rounded-lg px-4 py-3 text-sm" style={{ border: "1px solid rgba(var(--green-rgb),0.35)", backgroundColor: "rgba(var(--green-rgb),0.10)", color: T.green }}>✓ {msg}</div>;
 }
 
 function Spinner() {

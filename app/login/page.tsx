@@ -4,31 +4,32 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { signIn, getSession } from "@/lib/auth";
+import ThemeToggle from "@/components/ThemeToggle";
 
 const T = {
-  bg:        "#05080F",
-  bgCard:    "rgba(8,18,36,0.88)",
-  bgInput:   "rgba(11,26,48,0.92)",
-  border:    "#132D5A",
-  borderMid: "#1A3D7A",
-  royal:     "#1359B9",
-  sky:       "#9FE4FB",
-  skyDim:    "rgba(159,228,251,0.08)",
-  skyBorder: "rgba(159,228,251,0.22)",
-  textPri:   "#EBF4FF",
-  textSec:   "#9FE4FB",
-  textMuted: "#4D82B8",
-  green:     "#00C896",
-  amber:     "#FFA94D",
+  bg:        "var(--bg-base)",
+  bgCard:    "rgba(var(--bg-surface-rgb),0.88)",
+  bgInput:   "rgba(var(--bg-input-rgb),0.92)",
+  border:    "var(--border)",
+  borderMid: "var(--border-mid)",
+  royal:     "var(--royal)",
+  sky:       "var(--sky)",
+  skyDim:    "var(--sky-dim)",
+  skyBorder: "var(--sky-border)",
+  textPri:   "var(--text-pri)",
+  textSec:   "var(--text-sec)",
+  textMuted: "var(--text-muted)",
+  green:     "var(--green)",
+  amber:     "var(--amber)",
 };
 
 const PILLS = [
-  { icon: "◫", label: "Hybrid Search",   color: "#1359B9" },
-  { icon: "◎", label: "LLM Generation",  color: "#9FE4FB" },
-  { icon: "◈", label: "Cost Budgets",    color: "#00C896" },
-  { icon: "◉", label: "Audit Log",       color: "#FFA94D" },
-  { icon: "◐", label: "Multi-Tenancy",   color: "#9FE4FB" },
-  { icon: "◇", label: "A/B Feedback",    color: "#1359B9" },
+  { icon: "◫", label: "Hybrid Search",   color: "var(--royal)" },
+  { icon: "◎", label: "LLM Generation",  color: "var(--sky)" },
+  { icon: "◈", label: "Cost Budgets",    color: "var(--green)" },
+  { icon: "◉", label: "Audit Log",       color: "var(--amber)" },
+  { icon: "◐", label: "Multi-Tenancy",   color: "var(--magenta)" },
+  { icon: "◇", label: "A/B Feedback",    color: "var(--royal)" },
 ];
 
 export default function LoginPage() {
@@ -68,14 +69,14 @@ export default function LoginPage() {
         @keyframes drift2 { 0%,100%{transform:translate(0,0)scale(1)} 40%{transform:translate(-20px,24px)scale(1.05)} 70%{transform:translate(14px,-14px)scale(0.97)} }
         @keyframes fadeup { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:translateY(0)} }
         @keyframes gtext  { 0%{background-position:0% center} 100%{background-position:200% center} }
-        @keyframes pulseGreen { 0%,100%{box-shadow:0 0 0 0 rgba(0,200,150,0.5)} 50%{box-shadow:0 0 0 6px rgba(0,200,150,0)} }
+        @keyframes pulseGreen { 0%,100%{box-shadow:0 0 0 0 rgba(var(--green-rgb),0.5)} 50%{box-shadow:0 0 0 6px rgba(var(--green-rgb),0)} }
 
         .hero-title {
           font-size: clamp(36px, 4.5vw, 58px);
           font-weight: 900;
           line-height: 1.08;
           letter-spacing: -1.5px;
-          background: linear-gradient(135deg, #EBF4FF 0%, #9FE4FB 45%, #6BAED6 80%, #1359B9 100%);
+          background: var(--hero-title-gradient);
           background-size: 200% auto;
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
@@ -86,49 +87,57 @@ export default function LoginPage() {
           width: 100%;
           box-sizing: border-box;
           padding: 14px 18px;
-          border-radius: 12px;
+          border-radius: 18px;
           font-size: 15px;
-          border: 1px solid #1A3D7A;
-          background: rgba(11,26,48,0.92);
-          color: #EBF4FF;
+          border: none;
+          background: rgba(var(--bg-input-rgb),0.92);
+          color: var(--text-pri);
           outline: none;
-          transition: border-color 0.2s, box-shadow 0.2s;
+          box-shadow: var(--clay-pressed);
+          transition: box-shadow 0.2s;
         }
         .form-input:focus {
-          border-color: #9FE4FB;
-          box-shadow: 0 0 0 3px rgba(159,228,251,0.14), 0 0 20px rgba(19,89,185,0.20);
+          box-shadow: var(--clay-pressed), 0 0 0 3px rgba(var(--sky-rgb),0.14), 0 0 20px rgba(var(--royal-rgb),0.20);
         }
-        .form-input::placeholder { color: #1E3A5A; }
+        .form-input::placeholder { color: var(--text-dim); }
         .submit-btn {
           width: 100%;
           padding: 15px;
-          border-radius: 12px;
+          border-radius: 18px;
           font-size: 16px;
           font-weight: 700;
           color: white;
           border: none;
           cursor: pointer;
-          background: linear-gradient(135deg, #0E4A9A 0%, #1359B9 40%, #1A6ED9 70%, #2480F0 100%);
+          background: var(--btn-gradient);
           background-size: 200% auto;
-          box-shadow: 0 4px 24px rgba(19,89,185,0.45), inset 0 1px 0 rgba(255,255,255,0.15);
+          box-shadow:
+            var(--clay-raised),
+            0 4px 24px rgba(var(--royal-rgb),0.45), 0 0 30px rgba(var(--magenta-rgb),0.15), inset 0 1px 0 rgba(255,255,255,0.15);
           transition: background-position 0.4s, box-shadow 0.3s, transform 0.15s;
         }
         .submit-btn:hover:not(:disabled) {
           background-position: right center;
-          box-shadow: 0 0 40px rgba(19,89,185,0.65), 0 6px 20px rgba(19,89,185,0.40), inset 0 1px 0 rgba(255,255,255,0.15);
+          box-shadow:
+            var(--clay-raised-hov),
+            0 0 40px rgba(var(--royal-rgb),0.65), 0 0 50px rgba(var(--magenta-rgb),0.30), inset 0 1px 0 rgba(255,255,255,0.15);
           transform: translateY(-2px);
         }
-        .submit-btn:active { transform: translateY(0); }
+        .submit-btn:active {
+          transform: translateY(0);
+          box-shadow: var(--clay-pressed), 0 2px 14px rgba(var(--royal-rgb),0.35);
+        }
         .submit-btn:disabled { opacity: 0.55; cursor: not-allowed; }
         .pill-item {
           display: flex; align-items: center; gap: 7px;
           padding: 8px 16px; border-radius: 999px;
-          font-size: 13px; font-weight: 600; color: #EBF4FF;
+          font-size: 13px; font-weight: 600; color: var(--text-pri);
+          box-shadow: var(--clay-raised-sm);
           transition: transform 0.2s, box-shadow 0.2s;
         }
         .pill-item:hover { transform: translateY(-2px); }
         .stat-item { text-align: center; padding: 0 28px; }
-        .stat-item + .stat-item { border-left: 1px solid rgba(19,89,185,0.28); }
+        .stat-item + .stat-item { border-left: 1px solid rgba(var(--royal-rgb),0.28); }
       `}</style>
 
       {/* ══ LEFT PANEL ══════════════════════════════════════════════════════ */}
@@ -138,38 +147,39 @@ export default function LoginPage() {
       }}>
 
         {/* Deep layered background */}
-        <div style={{ position:"absolute", inset:0, background:"linear-gradient(150deg, #05080F 0%, #07111F 35%, #08152A 60%, #060D1A 100%)" }} />
+        <div style={{ position:"absolute", inset:0, background:"var(--panel-gradient)" }} />
 
         {/* Grid */}
         <div style={{
           position:"absolute", inset:0,
-          backgroundImage: `linear-gradient(rgba(19,89,185,0.10) 1px,transparent 1px), linear-gradient(90deg,rgba(19,89,185,0.10) 1px,transparent 1px)`,
+          backgroundImage: `linear-gradient(rgba(var(--royal-rgb),0.10) 1px,transparent 1px), linear-gradient(90deg,rgba(var(--royal-rgb),0.10) 1px,transparent 1px)`,
           backgroundSize: "54px 54px",
         }} />
 
         {/* Floating orbs */}
-        <div style={{ position:"absolute", top:"-8%", left:"-10%", width:600, height:600, borderRadius:"50%", background:"radial-gradient(circle, rgba(19,89,185,0.30) 0%, transparent 60%)", animation:"drift1 13s ease-in-out infinite" }} />
-        <div style={{ position:"absolute", bottom:"0%", right:"-8%", width:520, height:520, borderRadius:"50%", background:"radial-gradient(circle, rgba(159,228,251,0.15) 0%, transparent 60%)", animation:"drift2 16s ease-in-out infinite" }} />
-        <div style={{ position:"absolute", top:"38%", left:"42%", width:320, height:320, borderRadius:"50%", background:"radial-gradient(circle, rgba(19,89,185,0.12) 0%, transparent 60%)", animation:"drift1 10s ease-in-out infinite reverse" }} />
+        <div style={{ position:"absolute", top:"-8%", left:"-10%", width:600, height:600, borderRadius:"50%", background:"radial-gradient(circle, rgba(var(--royal-rgb),0.30) 0%, transparent 60%)", animation:"drift1 13s ease-in-out infinite" }} />
+        <div style={{ position:"absolute", bottom:"0%", right:"-8%", width:520, height:520, borderRadius:"50%", background:"radial-gradient(circle, rgba(var(--sky-rgb),0.15) 0%, transparent 60%)", animation:"drift2 16s ease-in-out infinite" }} />
+        <div style={{ position:"absolute", top:"38%", left:"42%", width:320, height:320, borderRadius:"50%", background:"radial-gradient(circle, rgba(var(--magenta-rgb),0.16) 0%, transparent 60%)", animation:"drift1 10s ease-in-out infinite reverse" }} />
 
         {/* Right edge glow border */}
-        <div style={{ position:"absolute", top:0, right:0, bottom:0, width:"1px", background:"linear-gradient(180deg, transparent 0%, rgba(159,228,251,0.40) 35%, rgba(19,89,185,0.50) 65%, transparent 100%)" }} />
+        <div style={{ position:"absolute", top:0, right:0, bottom:0, width:"1px", background:"linear-gradient(180deg, transparent 0%, rgba(var(--sky-rgb),0.40) 35%, rgba(var(--royal-rgb),0.50) 65%, transparent 100%)" }} />
 
         {/* ── Content ── */}
         <div style={{ position:"relative", zIndex:2, display:"flex", flexDirection:"column", justifyContent:"space-between", height:"100%", padding:"44px 52px" }}>
 
           {/* Top: Logo */}
-          <div>
+          <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between" }}>
             <Link href="/landing" style={{ display:"inline-flex", alignItems:"center", gap:12, textDecoration:"none" }}>
               <div style={{
-                width:42, height:42, borderRadius:11, flexShrink:0,
-                background:"linear-gradient(135deg, #1359B9, #9FE4FB)",
+                width:42, height:42, borderRadius:16, flexShrink:0,
+                background:"var(--logo-gradient)",
                 display:"flex", alignItems:"center", justifyContent:"center",
                 fontSize:18, fontWeight:900, color:"white",
-                boxShadow:"0 0 28px rgba(19,89,185,0.60)",
+                boxShadow:"0 0 28px rgba(var(--royal-rgb),0.60), var(--clay-raised-sm)",
               }}>R</div>
               <span style={{ fontSize:17, fontWeight:700, color: T.textPri, letterSpacing:"-0.3px" }}>Enterprise RAG</span>
             </Link>
+            <ThemeToggle />
           </div>
 
           {/* Middle: Hero */}
@@ -178,7 +188,7 @@ export default function LoginPage() {
             <div style={{
               display:"inline-flex", alignItems:"center", gap:8,
               padding:"7px 18px", borderRadius:999, marginBottom:28,
-              background:"rgba(0,200,150,0.10)", border:"1px solid rgba(0,200,150,0.28)",
+              background:"rgba(var(--green-rgb),0.10)", border:"1px solid rgba(var(--green-rgb),0.28)",
             }}>
               <span style={{ width:8, height:8, borderRadius:"50%", background: T.green, display:"inline-block", animation:"pulseGreen 2s ease infinite" }} />
               <span style={{ fontSize:13, fontWeight:600, color: T.green }}>All systems operational</span>
@@ -197,7 +207,7 @@ export default function LoginPage() {
             <div style={{ display:"flex", flexWrap:"wrap", gap:10 }}>
               {PILLS.map(p => (
                 <div key={p.label} className="pill-item" style={{
-                  background:`${p.color}16`, border:`1px solid ${p.color}38`,
+                  background:`color-mix(in srgb, ${p.color} 9%, transparent)`, border:`1px solid color-mix(in srgb, ${p.color} 22%, transparent)`,
                 }}>
                   <span style={{ color:p.color, fontSize:14 }}>{p.icon}</span>
                   <span>{p.label}</span>
@@ -229,7 +239,7 @@ export default function LoginPage() {
         <div style={{
           position:"absolute", top:"50%", left:"50%", transform:"translate(-50%,-50%)",
           width:500, height:500, borderRadius:"50%",
-          background:"radial-gradient(circle, rgba(19,89,185,0.10) 0%, transparent 65%)",
+          background:"radial-gradient(circle, rgba(var(--royal-rgb),0.10) 0%, transparent 65%)",
           pointerEvents:"none",
         }} />
 
@@ -238,23 +248,22 @@ export default function LoginPage() {
           {/* Card */}
           <div style={{
             padding:"40px 38px",
-            borderRadius:24,
-            border:"1px solid rgba(19,89,185,0.35)",
+            borderRadius:32,
             background: T.bgCard,
             backdropFilter:"blur(20px)",
             WebkitBackdropFilter:"blur(20px)",
-            boxShadow:"0 32px 100px rgba(5,8,15,0.75), 0 0 0 1px rgba(255,255,255,0.03) inset, 0 1px 0 rgba(255,255,255,0.06) inset",
+            boxShadow:"0 32px 100px rgba(var(--bg-base-rgb),0.35), var(--clay-raised-hov), 0 1px 0 rgba(255,255,255,0.5) inset",
             animation:"fadeup 0.65s 0.1s ease both",
           }}>
 
             {/* Card header */}
             <div style={{ marginBottom:32 }}>
               <div style={{
-                display:"inline-flex", width:52, height:52, borderRadius:14, marginBottom:20,
-                background:"linear-gradient(135deg, #1359B9, #9FE4FB)",
+                display:"inline-flex", width:52, height:52, borderRadius:18, marginBottom:20,
+                background:"var(--logo-gradient)",
                 alignItems:"center", justifyContent:"center",
                 fontSize:22, fontWeight:900, color:"white",
-                boxShadow:"0 4px 20px rgba(19,89,185,0.50)",
+                boxShadow:"0 4px 20px rgba(var(--royal-rgb),0.50), var(--clay-raised-sm)",
               }}>R</div>
               <h2 style={{ fontSize:26, fontWeight:800, color: T.textPri, margin:"0 0 8px", letterSpacing:"-0.5px" }}>
                 Welcome back
