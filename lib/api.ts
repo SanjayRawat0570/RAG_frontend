@@ -80,9 +80,12 @@ export interface Citation {
 }
 
 export interface AskResult {
-  intent:      string;
-  answer:      string;
-  citations:   Citation[];
+  intent:         string;
+  answer:         string;
+  citations:      Citation[];          // every source shown to the model
+  cited_markers?: string[];            // the sources the answer actually uses
+  confidence?:    "high" | "medium" | "low" | null;
+  answerable?:    boolean | null;
   provider:    string;
   cost_usd:    number | null;
   cache_hit:   boolean;

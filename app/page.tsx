@@ -17,6 +17,7 @@ import ThemeToggle from "@/components/ThemeToggle";
 import Icon, { BrandMark, IconName } from "@/components/Icon";
 import CommandPalette, { Command } from "@/components/CommandPalette";
 import { CountUp, Typewriter } from "@/components/Effects";
+import ConfidenceBadge from "@/components/ConfidenceBadge";
 
 type View = "dashboard" | "ask" | "docs" | "settings";
 type SettingsTab = "tenants" | "cost" | "security" | "feedback" | "personalization";
@@ -767,6 +768,10 @@ function AskView({ tenant }: { tenant: string }) {
 
 function AnswerCard({ entry, animate = false }: { entry: ChatEntry; animate?: boolean }) {
   const { result } = entry;
+  // Structured answers say which sources they used; older responses don't, so show all.
+  const cited = result.cited_markers
+    ? result.citations.filter(c => result.cited_markers!.includes(c.marker))
+    : result.citations;
   return (
     <div className="card">
       <div className="card-header">
@@ -779,19 +784,22 @@ function AnswerCard({ entry, animate = false }: { entry: ChatEntry; animate?: bo
             <div className="card-subtitle truncate">{entry.question}</div>
           </div>
         </div>
-        <span className={`badge ${result.cache_hit ? "badge-primary" : ""}`}>
-          {result.cache_hit ? <><Icon name="zap" size={11} />Cache hit</> : "Cache miss"}
-        </span>
+        <div className="flex shrink-0 items-center gap-2">
+          <ConfidenceBadge confidence={result.confidence} answerable={result.answerable} />
+          <span className={`badge ${result.cache_hit ? "badge-primary" : ""}`}>
+            {result.cache_hit ? <><Icon name="zap" size={11} />Cache hit</> : "Cache miss"}
+          </span>
+        </div>
       </div>
       <div className="card-body">
         <Typewriter text={result.answer} animate={animate}
           className="whitespace-pre-wrap text-[15px] leading-relaxed" style={{ color: "var(--text)" }} />
 
-        {result.citations?.length > 0 && (
+        {cited?.length > 0 && (
           <div className="mt-5">
             <div className="eyebrow mb-2">Sources</div>
             <ul className="grid gap-2 sm:grid-cols-2">
-              {result.citations.map(c => (
+              {cited.map(c => (
                 <li key={c.marker} className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm transition-colors hover:border-[var(--primary-border)]"
                   style={{ border: "1px solid var(--border)", background: "var(--surface-2)" }}>
                   <span className="badge badge-mono badge-primary">{c.marker}</span>
