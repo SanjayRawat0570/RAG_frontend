@@ -86,6 +86,9 @@ export interface AskResult {
   cited_markers?: string[];            // the sources the answer actually uses
   confidence?:    "high" | "medium" | "low" | null;
   answerable?:    boolean | null;
+  mode?:          AskMode;
+  steps?:         AgentStep[] | null;      // agentic trace (tool calls, rewrites)
+  rewritten_query?: string | null;
   provider:    string;
   cost_usd:    number | null;
   cache_hit:   boolean;
@@ -95,8 +98,26 @@ export interface AskResult {
 export const indexDocument = (tenant: string, text: string, filename: string) =>
   post<IndexResult>("/rag/index", { tenant, text, filename });
 
-export const askQuestion = (tenant: string, question: string, provider?: string) =>
-  post<AskResult>("/rag/ask", { tenant, question, provider });
+export type AskMode = "fast" | "agentic";
+
+export interface AgentStep {
+  type:          string;   // plan | tool_call | evaluate | rewrite | answer | memory_rewrite | planner_fallback
+  round?:        number;
+  tool?:         string;
+  args?:         Record<string, unknown>;
+  results?:      number;
+  sources?:      string[];
+  dropped_args?: string[];
+  error?:        string | null;
+  duration_ms?:  number;
+  query?:        string;
+  coverage?:     number;
+  evidence?:     number;
+  reason?:       string;
+}
+
+export const askQuestion = (tenant: string, question: string, mode: AskMode = "fast", provider?: string) =>
+  post<AskResult>("/rag/ask", { tenant, question, mode, provider });
 
 // ── Document upload (F1 pipeline) ─────────────────────────────────────────────
 

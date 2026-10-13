@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
-  AskResult, ExecutionStatus, IndexResult, ApiKeyRecord, AuditEvent,
+  AskMode, AskResult, ExecutionStatus, IndexResult, ApiKeyRecord, AuditEvent,
   FeedbackRecord, FeedbackStats, BudgetEntry, CostSummary,
   askQuestion, indexDocument, pollExecution, uploadDocument, getHealth,
   getCostPricing, getCostBudgets, getCostSummary, getSecurityApiKeys,
@@ -19,6 +19,7 @@ import CommandPalette, { Command } from "@/components/CommandPalette";
 import { CountUp, Typewriter } from "@/components/Effects";
 import ConfidenceBadge from "@/components/ConfidenceBadge";
 import AISettingsView from "@/components/AISettings";
+import AgentSteps from "@/components/AgentSteps";
 
 type View = "dashboard" | "ask" | "docs" | "settings";
 type SettingsTab = "tenants" | "ai" | "cost" | "security" | "feedback" | "personalization";
@@ -652,12 +653,21 @@ function AskView({ tenant }: { tenant: string }) {
   const [asking,   setAsking]   = useState(false);
   const [error,    setError]    = useState<string | null>(null);
   const [history,  setHistory]  = useState<ChatEntry[]>([]);
+  const [mode,     setModeState] = useState<AskMode>("fast");
+
+  useEffect(() => {
+    try { if (localStorage.getItem("ask-mode") === "agentic") setModeState("agentic"); } catch {}
+  }, []);
+  function setMode(m: AskMode) {
+    setModeState(m);
+    try { localStorage.setItem("ask-mode", m); } catch {}
+  }
 
   async function onAsk() {
     if (!question.trim()) return;
     setError(null); setAsking(true);
     try {
-      const result = await askQuestion(tenant, question);
+      const result = await askQuestion(tenant, question, mode);
       setHistory(h => [{ question, result, ts: Date.now() }, ...h].slice(0, 15));
       setQuestion("");
     } catch (e) { setError(String(e)); }
@@ -709,7 +719,7 @@ function AskView({ tenant }: { tenant: string }) {
                   <span key={i} className="h-2 w-2 animate-bounce rounded-full" style={{ background: "var(--primary)", animationDelay: `${i * 120}ms` }} />
                 ))}
               </span>
-              <span className="text-sm text-muted">Searching and generating…</span>
+              <span className="text-sm text-muted">{mode === "agentic" ? "Agent is planning and searching…" : "Searching and generating…"}</span>
             </div>
           </div>
         )}
@@ -725,7 +735,15 @@ function AskView({ tenant }: { tenant: string }) {
               className="w-full resize-none bg-transparent px-2 py-1.5 text-[15px] leading-relaxed outline-none" style={{ color: "var(--text)" }} />
           </div>
           <div className="card-footer">
-            <span className="flex items-center gap-1.5 text-xs text-muted">
+            <div className="tabs" role="radiogroup" aria-label="Answer mode" style={{ padding: 2 }}>
+              {([["fast", "Fast", "zap", "Single retrieval pass"], ["agentic", "Agentic", "bot", "Plans tool calls and searches again (up to 3 rounds)"]] as const).map(([id, label, icon, hint]) => (
+                <button key={id} role="radio" aria-checked={mode === id} title={hint} onClick={() => setMode(id)}
+                  className={`tab inline-flex items-center gap-1.5${mode === id ? " active" : ""}`} style={{ height: 28, fontSize: 13 }}>
+                  <Icon name={icon} size={13} />{label}
+                </button>
+              ))}
+            </div>
+            <span className="hidden items-center gap-1.5 text-xs text-muted md:flex">
               Searching <span className="badge badge-mono badge-primary">{tenant}</span>
               <span className="hidden sm:inline">· <kbd className="kbd">Ctrl</kbd> + <kbd className="kbd">Enter</kbd> to submit</span>
             </span>
@@ -797,6 +815,8 @@ function AnswerCard({ entry, animate = false }: { entry: ChatEntry; animate?: bo
         <Typewriter text={result.answer} animate={animate}
           className="whitespace-pre-wrap text-[15px] leading-relaxed" style={{ color: "var(--text)" }} />
 
+        <AgentSteps steps={result.steps} rewrittenQuery={result.rewritten_query} />
+
         {cited?.length > 0 && (
           <div className="mt-5">
             <div className="eyebrow mb-2">Sources</div>
@@ -815,7 +835,8 @@ function AnswerCard({ entry, animate = false }: { entry: ChatEntry; animate?: bo
       </div>
       <div className="card-footer">
         <div className="flex flex-wrap gap-x-5 gap-y-1 text-xs text-muted">
-          <Meta label="Intent" value={result.intent} />
+          {result.mode && <Meta label="Mode" value={result.mode === "agentic" ? "Agentic" : "Fast"} />}
+          <Meta label="Intent" value={result.intent ?? "—"} />
           <Meta label="Provider" value={result.provider} />
           {result.cost_usd != null && <Meta label="Cost" value={`$${result.cost_usd.toFixed(5)}`} />}
           <Meta label="Latency" value={`${result.duration_ms.toFixed(0)} ms`} />
