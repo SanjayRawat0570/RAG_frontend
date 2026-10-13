@@ -174,6 +174,38 @@ export const getProfile    = (userId: string) => get<UserProfile>(`/personalizat
 export const upsertProfile = (data: Partial<UserProfile["content"]> & { user_id: string }) =>
   post<UserProfile>("/personalization/profile", data);
 
+// ── Tenant AI settings (few-shot, vision) ─────────────────────────────────────
+
+export interface FewShotExample {
+  question:   string;
+  context:    string[];
+  answer:     string;
+  citations:  number[];
+  confidence: "high" | "medium" | "low";
+  answerable: boolean;
+}
+
+export interface TenantAISettings {
+  tenant:            string;
+  few_shot_enabled:  boolean;
+  few_shot_custom:   boolean;
+  few_shot_examples: FewShotExample[];
+  default_examples:  FewShotExample[];
+  vision_enabled:    boolean;
+}
+
+export interface TenantAISettingsUpdate {
+  few_shot_enabled?:  boolean;
+  few_shot_examples?: FewShotExample[];
+  reset_examples?:    boolean;
+  vision_enabled?:    boolean;
+}
+
+export const getTenantSettings = (tenant: string) =>
+  get<TenantAISettings>(`/tenant-settings/${encodeURIComponent(tenant)}`);
+export const updateTenantSettings = (tenant: string, body: TenantAISettingsUpdate) =>
+  put<TenantAISettings>(`/tenant-settings/${encodeURIComponent(tenant)}`, body);
+
 // ── Tenants (F19) ─────────────────────────────────────────────────────────────
 
 export interface TenantInfo { namespace: string; doc_count: number; vector_count: number }

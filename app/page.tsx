@@ -18,9 +18,10 @@ import Icon, { BrandMark, IconName } from "@/components/Icon";
 import CommandPalette, { Command } from "@/components/CommandPalette";
 import { CountUp, Typewriter } from "@/components/Effects";
 import ConfidenceBadge from "@/components/ConfidenceBadge";
+import AISettingsView from "@/components/AISettings";
 
 type View = "dashboard" | "ask" | "docs" | "settings";
-type SettingsTab = "tenants" | "cost" | "security" | "feedback" | "personalization";
+type SettingsTab = "tenants" | "ai" | "cost" | "security" | "feedback" | "personalization";
 interface ChatEntry { question: string; result: AskResult; ts: number }
 
 const NAV: { id: View; label: string; icon: IconName; desc: string }[] = [
@@ -35,6 +36,7 @@ const ADMIN_NAV: { id: View; label: string; icon: IconName; desc: string }[] = [
 
 const SETTINGS_TABS: { id: SettingsTab; label: string; icon: IconName }[] = [
   { id: "tenants",         label: "Workspaces",      icon: "users"   },
+  { id: "ai",              label: "AI Settings",     icon: "sparkles" },
   { id: "cost",            label: "Usage & Billing", icon: "dollar"  },
   { id: "security",        label: "Security",        icon: "shield"  },
   { id: "feedback",        label: "Feedback",        icon: "star"    },
@@ -1386,6 +1388,7 @@ function SettingsView({
 
       <div key={tab} className="rise">
         {tab === "tenants"         && <TenantsView tenant={tenant} onChange={onTenantChange} />}
+        {tab === "ai"              && <AISettingsView tenant={tenant} />}
         {tab === "cost"            && <CostView />}
         {tab === "security"        && <SecurityView />}
         {tab === "feedback"        && <FeedbackView />}
