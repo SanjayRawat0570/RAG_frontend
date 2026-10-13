@@ -89,6 +89,9 @@ export interface AskResult {
   mode?:          AskMode;
   steps?:         AgentStep[] | null;      // agentic trace (tool calls, rewrites)
   rewritten_query?: string | null;
+  conversation_id?:     string | null;
+  standalone_question?: string;        // follow-up rewritten using the conversation
+  original_question?:   string;
   provider:    string;
   cost_usd:    number | null;
   cache_hit:   boolean;
@@ -116,8 +119,37 @@ export interface AgentStep {
   reason?:       string;
 }
 
-export const askQuestion = (tenant: string, question: string, mode: AskMode = "fast", provider?: string) =>
-  post<AskResult>("/rag/ask", { tenant, question, mode, provider });
+export const askQuestion = (
+  tenant: string, question: string, mode: AskMode = "fast", conversationId?: string | null, provider?: string,
+) => post<AskResult>("/rag/ask", { tenant, question, mode, conversation_id: conversationId ?? undefined, provider });
+
+// ── Conversations (memory) ────────────────────────────────────────────────────
+
+export interface ConversationSummary {
+  id:         string;
+  tenant:     string;
+  title:      string;
+  created_at: string;
+  updated_at: string;
+  turns:      number;
+}
+
+export interface ConversationTurn {
+  question:            string;
+  standalone_question: string;
+  answer:              string;
+  cited_sources:       string[];
+  at:                  string;
+}
+
+const convQs = (tenant: string) => `tenant=${encodeURIComponent(tenant)}`;
+export const listConversations  = (tenant: string) =>
+  get<{ total: number; conversations: ConversationSummary[] }>(`/conversations?${convQs(tenant)}`);
+export const newConversation    = (tenant: string) => post<ConversationSummary>(`/conversations?${convQs(tenant)}`, {});
+export const getConversation    = (tenant: string, id: string) =>
+  get<ConversationSummary & { messages: ConversationTurn[] }>(`/conversations/${encodeURIComponent(id)}?${convQs(tenant)}`);
+export const deleteConversation = (tenant: string, id: string) =>
+  del<{ status: string }>(`/conversations/${encodeURIComponent(id)}?${convQs(tenant)}`);
 
 // ── Document upload (F1 pipeline) ─────────────────────────────────────────────
 

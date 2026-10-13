@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
-  AskMode, AskResult, ExecutionStatus, IndexResult, ApiKeyRecord, AuditEvent,
+  AskMode, AskResult, ConversationTurn, ExecutionStatus, getConversation, IndexResult, ApiKeyRecord, AuditEvent,
   FeedbackRecord, FeedbackStats, BudgetEntry, CostSummary,
   askQuestion, indexDocument, pollExecution, uploadDocument, getHealth,
   getCostPricing, getCostBudgets, getCostSummary, getSecurityApiKeys,
@@ -20,10 +20,11 @@ import { CountUp, Typewriter } from "@/components/Effects";
 import ConfidenceBadge from "@/components/ConfidenceBadge";
 import AISettingsView from "@/components/AISettings";
 import AgentSteps from "@/components/AgentSteps";
+import ConversationSidebar from "@/components/ConversationSidebar";
 
 type View = "dashboard" | "ask" | "docs" | "settings";
 type SettingsTab = "tenants" | "ai" | "cost" | "security" | "feedback" | "personalization";
-interface ChatEntry { question: string; result: AskResult; ts: number }
+interface ChatEntry { question: string; result: AskResult; ts: number; restored?: boolean }
 
 const NAV: { id: View; label: string; icon: IconName; desc: string }[] = [
   { id: "dashboard", label: "Overview",       icon: "dashboard", desc: "Platform status, capabilities and getting started" },
@@ -654,6 +655,8 @@ function AskView({ tenant }: { tenant: string }) {
   const [error,    setError]    = useState<string | null>(null);
   const [history,  setHistory]  = useState<ChatEntry[]>([]);
   const [mode,     setModeState] = useState<AskMode>("fast");
+  const [conversationId, setConversationId] = useState<string | null>(null);
+  const [sidebarKey, setSidebarKey] = useState(0);
 
   useEffect(() => {
     try { if (localStorage.getItem("ask-mode") === "agentic") setModeState("agentic"); } catch {}
@@ -667,12 +670,30 @@ function AskView({ tenant }: { tenant: string }) {
     if (!question.trim()) return;
     setError(null); setAsking(true);
     try {
-      const result = await askQuestion(tenant, question, mode);
+      const result = await askQuestion(tenant, question, mode, conversationId);
       setHistory(h => [{ question, result, ts: Date.now() }, ...h].slice(0, 15));
+      if (result.conversation_id) setConversationId(result.conversation_id);
+      setSidebarKey(k => k + 1);
       setQuestion("");
     } catch (e) { setError(String(e)); }
     finally { setAsking(false); }
   }
+
+  function newChat() {
+    setConversationId(null); setHistory([]); setError(null);
+  }
+
+  async function openConversation(id: string) {
+    setError(null);
+    try {
+      const conv = await getConversation(tenant, id);
+      setConversationId(conv.id);
+      setHistory(conv.messages.map(restoredEntry).reverse());
+    } catch (e) { setError(`Could not open conversation: ${e}`); }
+  }
+
+  // New workspace → new chat; conversations belong to a workspace.
+  useEffect(() => { newChat(); }, [tenant]);
 
   const latest = history[0] ?? null;
   const thread = [...history].reverse();
@@ -754,36 +775,23 @@ function AskView({ tenant }: { tenant: string }) {
         </div>
       </div>
 
-      <div className="card self-start lg:sticky lg:top-0">
-        <div className="card-header">
-          <div className="card-title flex items-center gap-2"><Icon name="clock" size={15} className="text-muted" />Recent queries</div>
-          <span className="badge badge-mono">{history.length} / 15</span>
-        </div>
-        {history.length === 0 ? (
-          <p className="px-5 py-8 text-center text-sm text-muted">No queries yet.</p>
-        ) : (
-          <ul className="p-2">
-            {history.map(entry => (
-              <li key={entry.ts}>
-                <button onClick={() => setQuestion(entry.question)}
-                  className="group w-full rounded-xl px-3 py-2.5 text-left transition-colors hover:bg-[var(--primary-soft)]">
-                  <p className="truncate text-sm transition-colors group-hover:text-[var(--primary)]" style={{ color: "var(--text)" }}>{entry.question}</p>
-                  <div className="mt-1.5 flex items-center gap-2">
-                    <span className={`badge ${entry.result.cache_hit ? "badge-primary" : ""}`}>
-                      {entry.result.cache_hit ? "Cached" : entry.result.provider}
-                    </span>
-                    <span className="flex items-center gap-1 text-xs text-muted">
-                      <Icon name="clock" size={11} />{entry.result.duration_ms.toFixed(0)} ms
-                    </span>
-                  </div>
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
+      <ConversationSidebar tenant={tenant} activeId={conversationId} refreshKey={sidebarKey}
+        onSelect={openConversation} onNew={newChat} />
     </div>
   );
+}
+
+function restoredEntry(t: ConversationTurn, i: number): ChatEntry {
+  const steps = t.standalone_question !== t.question
+    ? [{ type: "memory_rewrite", round: 0, query: t.standalone_question }] : null;
+  return {
+    question: t.question, ts: Date.parse(t.at) + i, restored: true,
+    result: {
+      intent: "", answer: t.answer, provider: "", cost_usd: null, cache_hit: false, duration_ms: 0,
+      citations: t.cited_sources.map((source, n) => ({ marker: `[${n + 1}]`, heading: null, source })),
+      steps,
+    },
+  };
 }
 
 function AnswerCard({ entry, animate = false }: { entry: ChatEntry; animate?: boolean }) {
@@ -833,7 +841,7 @@ function AnswerCard({ entry, animate = false }: { entry: ChatEntry; animate?: bo
           </div>
         )}
       </div>
-      <div className="card-footer">
+      {!entry.restored && <div className="card-footer">
         <div className="flex flex-wrap gap-x-5 gap-y-1 text-xs text-muted">
           {result.mode && <Meta label="Mode" value={result.mode === "agentic" ? "Agentic" : "Fast"} />}
           <Meta label="Intent" value={result.intent ?? "—"} />
@@ -841,7 +849,7 @@ function AnswerCard({ entry, animate = false }: { entry: ChatEntry; animate?: bo
           {result.cost_usd != null && <Meta label="Cost" value={`$${result.cost_usd.toFixed(5)}`} />}
           <Meta label="Latency" value={`${result.duration_ms.toFixed(0)} ms`} />
         </div>
-      </div>
+      </div>}
     </div>
   );
 }
