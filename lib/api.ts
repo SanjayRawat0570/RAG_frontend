@@ -191,11 +191,14 @@ export const getCostSummary  = () => get<CostSummary>("/cost/summary");
 
 // ── Security (F25) ────────────────────────────────────────────────────────────
 
-export interface ApiKeyRecord { id: string; name: string; prefix: string; revoked: boolean; usage_count: number; created_at: string; last_used: string | null }
+export type KeyRole = "viewer" | "member" | "admin" | "owner";
+export interface ApiKeyRecord { id: string; name: string; prefix: string; tenant: string | null; role: KeyRole; revoked: boolean; usage_count: number; created_at: string; last_used: string | null }
 export interface AuditEvent   { id: string; user_id: string; action: string; resource: string; timestamp: string; ip_address: string }
 
 export const getSecurityApiKeys     = () => get<{ total: number; keys: ApiKeyRecord[] }>("/security/api-keys");
-export const createSecurityApiKey   = (name: string) => post<{ id: string; key: string; name: string; warning: string }>("/security/api-keys", { name });
+/** A key scoped to a workspace (`tenant`) can only act there, with `role`'s permissions — used by the MCP server. */
+export const createSecurityApiKey   = (name: string, scope?: { tenant: string; role: KeyRole }) =>
+  post<{ id: string; key: string; name: string; tenant: string | null; role: KeyRole; warning: string }>("/security/api-keys", { name, ...scope });
 export const revokeSecurityApiKey   = (id: string) => del<{ status: string }>(`/security/api-keys/${id}`);
 export const getAuditEvents         = (limit = 20) => get<{ total: number; events: AuditEvent[] }>(`/security/audit/events?limit=${limit}`);
 export const getComplianceReport    = () => get<Record<string, unknown>>("/security/compliance");

@@ -19,6 +19,7 @@ import CommandPalette, { Command } from "@/components/CommandPalette";
 import { CountUp, Typewriter } from "@/components/Effects";
 import ConfidenceBadge from "@/components/ConfidenceBadge";
 import AISettingsView from "@/components/AISettings";
+import McpAccess from "@/components/McpAccess";
 import AgentSteps from "@/components/AgentSteps";
 import ConversationSidebar from "@/components/ConversationSidebar";
 
@@ -1105,13 +1106,14 @@ function SecurityView() {
             <div className="overflow-x-auto" style={{ borderTop: "1px solid var(--border)" }}>
               <table className="table">
                 <thead>
-                  <tr><th>Name</th><th>Prefix</th><th>Uses</th><th>Status</th><th>Created</th><th /></tr>
+                  <tr><th>Name</th><th>Prefix</th><th>Scope</th><th>Uses</th><th>Status</th><th>Created</th><th /></tr>
                 </thead>
                 <tbody>
                   {keys.map(k => (
                     <tr key={k.id}>
                       <td className="font-medium" style={{ color: "var(--text)" }}>{k.name}</td>
                       <td className="font-mono">{k.prefix}…</td>
+                      <td>{k.tenant ? <span className="badge badge-mono">{k.tenant} · {k.role}</span> : <span className="text-muted">none</span>}</td>
                       <td>{k.usage_count}</td>
                       <td>
                         <span className={`badge ${k.revoked ? "badge-danger" : "badge-success"}`}>
@@ -1417,7 +1419,7 @@ function SettingsView({
 
       <div key={tab} className="rise">
         {tab === "tenants"         && <TenantsView tenant={tenant} onChange={onTenantChange} />}
-        {tab === "ai"              && <AISettingsView tenant={tenant} />}
+        {tab === "ai"              && <div className="space-y-6"><AISettingsView tenant={tenant} /><McpAccess tenant={tenant} /></div>}
         {tab === "cost"            && <CostView />}
         {tab === "security"        && <SecurityView />}
         {tab === "feedback"        && <FeedbackView />}
