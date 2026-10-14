@@ -77,6 +77,8 @@ export interface Citation {
   marker:  string;
   heading: string | null;
   source:  string | null;
+  page?:        number;               // PDF page, when known
+  source_type?: "text" | "vision";    // "vision" = read from a page image by Gemini
 }
 
 export interface AskResult {

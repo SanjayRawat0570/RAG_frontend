@@ -836,6 +836,12 @@ function AnswerCard({ entry, animate = false }: { entry: ChatEntry; animate?: bo
                   <span className="badge badge-mono badge-primary">{c.marker}</span>
                   <Icon name="file" size={13} className="shrink-0 text-muted" />
                   <span className="truncate" style={{ color: "var(--text-2)" }}>{c.heading ?? c.source ?? "Untitled section"}</span>
+                  {c.page != null && <span className="shrink-0 text-xs text-muted">p. {c.page}</span>}
+                  {c.source_type === "vision" && (
+                    <span className="badge shrink-0" title="Text read from a scanned page or figure by Gemini vision">
+                      <Icon name="eye" size={11} />Vision
+                    </span>
+                  )}
                 </li>
               ))}
             </ul>

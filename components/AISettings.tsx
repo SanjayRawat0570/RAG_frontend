@@ -26,6 +26,8 @@ export default function AISettingsView({ tenant }: { tenant: string }) {
   const [citDraft, setCitDraft] = useState<Record<number, string>>({});  // raw text while typing "1, 2"
   const [saving,   setSaving]   = useState(false);
   const [notice,   setNotice]   = useState<{ tone: "danger" | "success"; msg: string } | null>(null);
+  const [visionSaving, setVisionSaving] = useState(false);
+  const [visionError,  setVisionError]  = useState<string | null>(null);
 
   function apply(s: TenantAISettings) {
     setSettings(s);
@@ -62,6 +64,18 @@ export default function AISettingsView({ tenant }: { tenant: string }) {
     const invalid = cleaned.findIndex(ex => !ex.question.trim() || !ex.answer.trim());
     if (invalid >= 0) { setNotice({ tone: "danger", msg: `Example ${invalid + 1} needs a question and an answer.` }); return; }
     save({ few_shot_enabled: enabled, few_shot_examples: cleaned }, "Few-shot examples saved. They apply to the next question.");
+  }
+
+  // Saved on its own so unsaved few-shot edits aren't reset.
+  async function toggleVision() {
+    if (!settings) return;
+    setVisionSaving(true); setVisionError(null);
+    try {
+      const s = await updateTenantSettings(tenant, { vision_enabled: !settings.vision_enabled });
+      setSettings(prev => prev && { ...prev, vision_enabled: s.vision_enabled });
+    } catch (e) {
+      setVisionError(String(e).includes("403") ? "Only workspace admins can change this." : `Save failed: ${e}`);
+    } finally { setVisionSaving(false); }
   }
 
   if (!settings) {
@@ -156,6 +170,30 @@ export default function AISettingsView({ tenant }: { tenant: string }) {
             <Icon name="refresh" size={14} />Reset to defaults
           </button>
           <button onClick={onSave} disabled={saving} className="btn btn-primary">{saving ? "Saving…" : "Save examples"}</button>
+        </div>
+      </div>
+
+      <div className="card">
+        <div className="card-header">
+          <div>
+            <div className="card-title flex items-center gap-2"><Icon name="eye" size={15} className="text-muted" />Vision ingestion</div>
+            <div className="card-subtitle">Read scanned PDF pages, charts and images with Gemini when documents are uploaded</div>
+          </div>
+          <span className={`badge ${settings.vision_enabled ? "badge-success" : ""}`}>{settings.vision_enabled ? "On" : "Off"}</span>
+        </div>
+        <div className="card-body space-y-3">
+          {visionError && <Banner tone="danger" msg={visionError} />}
+          <div className="flex items-center justify-between gap-4 rounded-lg px-4 py-3" style={{ border: "1px solid var(--border)" }}>
+            <div>
+              <p className="text-sm font-medium" style={{ color: "var(--text)" }}>Use Gemini vision for images</p>
+              <p className="text-xs text-muted">
+                Each scanned page or figure is one model call (up to 20 per document), so this is off by default.
+                Text read this way is cited with its page and marked &ldquo;Vision&rdquo;. Needs GEMINI_API_KEY on the server.
+              </p>
+            </div>
+            <button role="switch" aria-checked={settings.vision_enabled} onClick={toggleVision} disabled={visionSaving}
+              className="switch" aria-label="Use Gemini vision for images" />
+          </div>
         </div>
       </div>
     </div>
