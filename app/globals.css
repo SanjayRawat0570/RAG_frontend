@@ -354,6 +354,7 @@ code, pre, kbd, .font-mono {
   .alert-danger  { background: var(--danger-soft);  color: var(--danger);  border-color: var(--danger-border); }
   .alert-success { background: var(--success-soft); color: var(--success); border-color: var(--success-border); }
   .alert-info    { background: var(--primary-soft); color: var(--primary); border-color: var(--primary-border); }
+  .alert-warning { background: var(--warning-soft); color: var(--warning); border-color: var(--warning-border); }
 
   /* ── Tables ────────────────────────────────────────────────────────── */
   .table { width: 100%; border-collapse: collapse; font-size: 13px; }

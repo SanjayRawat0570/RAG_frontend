@@ -821,6 +821,16 @@ function AnswerCard({ entry, animate = false }: { entry: ChatEntry; animate?: bo
         </div>
       </div>
       <div className="card-body">
+        {result.provider === "extractive-fallback" && (
+          <div className="alert alert-warning" role="status">
+            <Icon name="alert" size={15} />
+            <span>
+              <span className="font-medium">The AI model is unavailable right now.</span>{" "}
+              This answer is the closest passage from your documents, quoted as-is rather than written by
+              the model. Check the sources below.
+            </span>
+          </div>
+        )}
         <Typewriter text={result.answer} animate={animate}
           className="whitespace-pre-wrap text-[15px] leading-relaxed" style={{ color: "var(--text)" }} />
 
