@@ -121,9 +121,15 @@ export interface AgentStep {
   reason?:       string;
 }
 
+// The chat keeps history: the first question of a chat asks the server to start a
+// stored conversation (the API is stateless otherwise); later ones continue it.
 export const askQuestion = (
   tenant: string, question: string, mode: AskMode = "fast", conversationId?: string | null, provider?: string,
-) => post<AskResult>("/rag/ask", { tenant, question, mode, conversation_id: conversationId ?? undefined, provider });
+) => post<AskResult>("/rag/ask", {
+  tenant, question, mode, provider,
+  conversation_id: conversationId ?? undefined,
+  new_conversation: !conversationId,
+});
 
 // ── Conversations (memory) ────────────────────────────────────────────────────
 
